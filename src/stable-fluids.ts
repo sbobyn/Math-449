@@ -279,6 +279,10 @@ function get_from_UI(d: Float32Array, u: Float32Array, v: Float32Array) {
 
 function draw_velocity() {}
 
+function drawVector(i: number, j: number) {
+    
+}
+
 function draw_density() {
   forEachCell((i, j) => drawCell(i - 1, j - 1));
 }

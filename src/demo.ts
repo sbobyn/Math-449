@@ -1,5 +1,3 @@
-import { dens_step, vel_step } from "./solver.js";
-
 function ix(i: number, j: number): number {
   return i + (N + 2) * j;
 }
@@ -19,7 +17,7 @@ let avgFPS = 0;
 const N = 16;
 const size = (N + 2) * (N + 2);
 const dt = 1 / 60.0;
-const diff = 0.0;
+const diff = 0.1;
 const visc = 0.0;
 const force = 5.0;
 const source = 100.0;
@@ -31,9 +29,17 @@ let u_prev = new Float32Array(size);
 let v_prev = new Float32Array(size);
 let dens = new Float32Array(size);
 let dens_prev = new Float32Array(size);
+let tmp = new Float32Array(size);
 
 const canvas = <HTMLCanvasElement>document.getElementById("canvas");
 const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
+const canvasRect = canvas.getBoundingClientRect();
+canvas.addEventListener("mousedown", handleMouseDown);
+canvas.addEventListener("mousemove", handleMouseMove);
+canvas.addEventListener("mouseup", handleMouseUp);
+canvas.addEventListener("contextmenu", function (e: Event) {
+  e.preventDefault();
+});
 
 const win_x = canvas.width;
 const win_y = canvas.height;
@@ -45,7 +51,158 @@ let omy: number;
 let mx: number;
 let my: number;
 
-function get_from_UI(d: Float32Array, u: Float32Array, v: Float32Array) {}
+let mouseLeftDown = false;
+let mouseRightDown = false;
+
+function handleMouseDown(e: MouseEvent) {
+  if (e.button != 0 && e.button != 2) return;
+
+  mouseLeftDown = e.button == 0;
+  mouseRightDown = e.button == 2;
+
+  mx = e.clientX - canvasRect.left;
+  omx = mx;
+  my = e.clientY - canvasRect.top;
+  omy = my;
+
+  console.log(`mouse ${e.button} down at (${mx}, ${my})`);
+}
+
+function handleMouseMove(e: MouseEvent) {
+  if (!mouseLeftDown && !mouseRightDown) return;
+
+  mx = e.clientX - canvasRect.left;
+  my = e.clientY - canvasRect.top;
+
+  console.log(`mouse ${e.button} move at (${mx}, ${my})`);
+}
+
+function handleMouseUp(e: MouseEvent) {
+  if (!mouseLeftDown && !mouseRightDown) return;
+
+  mouseLeftDown = false;
+  mouseRightDown = false;
+
+  console.log(`mouse ${e.button} up`);
+}
+
+function swap(x0: Float32Array, x: Float32Array) {
+  tmp.set(x0);
+  x0.set(x);
+  x.set(tmp);
+}
+
+function add_source(N: number, x: Float32Array, s: Float32Array, dt: number) {
+  for (let i = 0; i < size; i++) x[i] += dt * s[i];
+}
+
+function set_bnd(N: number, b: number, x: Float32Array) {
+  for (let i = 1; i <= N; i++) {
+    x[ix(0, i)] = b == 1 ? -x[ix(1, i)] : x[ix(1, i)];
+    x[ix(N + 1, i)] = b == 1 ? -x[ix(N, i)] : x[ix(N, i)];
+    x[ix(i, 0)] = b == 2 ? -x[ix(i, 1)] : x[ix(i, 1)];
+    x[ix(i, N + 1)] = b == 2 ? -x[ix(i, N)] : x[ix(i, N)];
+  }
+  x[ix(0, 0)] = 0.5 * (x[ix(1, 0)] + x[ix(0, 1)]);
+  x[ix(0, N + 1)] = 0.5 * (x[ix(1, N + 1)] + x[ix(0, N)]);
+  x[ix(N + 1, 0)] = 0.5 * (x[ix(N, 0)] + x[ix(N + 1, 1)]);
+  x[ix(N + 1, N + 1)] = 0.5 * (x[ix(N, N + 1)] + x[ix(N + 1, N)]);
+}
+
+function lin_solve(
+  N: number,
+  b: number,
+  x: Float32Array,
+  x0: Float32Array,
+  a: number,
+  c: number
+) {
+  for (let k = 0; k < 20; k++) {
+    forEachCell((i, j) => {
+      x[ix(i, j)] =
+        (x0[ix(i, j)] +
+          a *
+            (x[ix(i - 1, j)] +
+              x[ix(i + 1, j)] +
+              x[ix(i, j - 1)] +
+              x[ix(i, j + 1)])) /
+        c;
+    });
+    set_bnd(N, b, x);
+  }
+}
+
+function diffuse(
+  N: number,
+  b: number,
+  x: Float32Array,
+  x0: Float32Array,
+  diff: number,
+  dt: number
+) {
+  let a = dt * diff * N * N;
+  lin_solve(N, b, x, x0, a, 1 + 4 * a);
+}
+
+function advect(
+  N: number,
+  b: number,
+  d: Float32Array,
+  d0: Float32Array,
+  u: Float32Array,
+  v: Float32Array,
+  dt: number
+) {}
+
+function project(
+  N: number,
+  u: Float32Array,
+  v: Float32Array,
+  p: Float32Array,
+  div: Float32Array
+) {}
+
+export function dens_step(
+  N: number,
+  x: Float32Array,
+  x0: Float32Array,
+  u: Float32Array,
+  v: Float32Array,
+  diff: number,
+  dt: number
+) {
+  add_source(N, x, x0, dt);
+  swap(x0, x);
+  diffuse(N, 0, x, x0, diff, dt);
+  // swap(x0, x);
+  // advect(N, 0, x, x0, u, v, dt);
+}
+
+export function vel_step(
+  N: number,
+  u: Float32Array,
+  v: Float32Array,
+  u0: Float32Array,
+  v0: Float32Array,
+  visc: number,
+  dt: number
+) {}
+
+function get_from_UI(d: Float32Array, u: Float32Array, v: Float32Array) {
+  d.fill(0);
+  u.fill(0);
+  v.fill(0);
+
+  if (!mouseLeftDown && !mouseRightDown) return;
+
+  const i = Math.floor((mx / win_x) * N) + 1;
+  const j = Math.floor((my / win_y) * N) + 1;
+
+  if (mouseRightDown) {
+    d[ix(i, j)] = 100;
+    console.log(i, j);
+  }
+}
 
 function draw_velocity() {}
 
@@ -94,7 +251,7 @@ function draw() {
 
 function step() {
   get_from_UI(dens_prev, u_prev, v_prev);
-  vel_step(N, u, v, u_prev, v_prev, visc, dt);
+  // vel_step(N, u, v, u_prev, v_prev, visc, dt);
   dens_step(N, dens, dens_prev, u, v, diff, dt);
 }
 
@@ -115,10 +272,6 @@ function main(now: number) {
   draw();
   requestAnimationFrame(main);
 }
-
-forEachCell((i, j) => {
-  dens[ix(i, j)] = Math.random();
-});
 
 ctx.font = "15px sans-serif";
 let prevTime = performance.now();

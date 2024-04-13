@@ -14,10 +14,10 @@ let lastFPSValues = new Float32Array(60);
 let numFPSValues = 0;
 let avgFPS = 0;
 
-const N = 16;
+const N = 64;
 const size = (N + 2) * (N + 2);
-const dt = 1 / 60.0;
-const diff = 0.1;
+const dt = 1 / 10.0;
+const diff = 0.0001;
 const visc = 0.0;
 const force = 5.0;
 const source = 100.0;
@@ -65,7 +65,7 @@ function handleMouseDown(e: MouseEvent) {
   my = e.clientY - canvasRect.top;
   omy = my;
 
-  console.log(`mouse ${e.button} down at (${mx}, ${my})`);
+  // console.log(`mouse ${e.button} down at (${mx}, ${my})`);
 }
 
 function handleMouseMove(e: MouseEvent) {
@@ -74,7 +74,7 @@ function handleMouseMove(e: MouseEvent) {
   mx = e.clientX - canvasRect.left;
   my = e.clientY - canvasRect.top;
 
-  console.log(`mouse ${e.button} move at (${mx}, ${my})`);
+  // console.log(`mouse ${e.button} move at (${mx}, ${my})`);
 }
 
 function handleMouseUp(e: MouseEvent) {
@@ -83,7 +83,7 @@ function handleMouseUp(e: MouseEvent) {
   mouseLeftDown = false;
   mouseRightDown = false;
 
-  console.log(`mouse ${e.button} up`);
+  // console.log(`mouse ${e.button} up`);
 }
 
 function swap(x0: Float32Array, x: Float32Array) {
@@ -152,7 +152,38 @@ function advect(
   u: Float32Array,
   v: Float32Array,
   dt: number
-) {}
+) {
+  let i: number, j: number, i0: number, j0: number, i1: number, j1: number;
+  let x: number,
+    y: number,
+    s0: number,
+    t0: number,
+    s1: number,
+    t1: number,
+    dt0: number;
+
+  dt0 = dt * N;
+  forEachCell((i, j) => {
+    x = i - dt0 * u[ix(i, j)];
+    y = j - dt0 * v[ix(i, j)];
+    if (x < 0.5) x = 0.5;
+    if (x > N + 0.5) x = N + 0.5;
+    i0 = Math.floor(x);
+    i1 = i0 + 1;
+    if (y < 0.5) y = 0.5;
+    if (y > N + 0.5) y = N + 0.5;
+    j0 = Math.floor(y);
+    j1 = j0 + 1;
+    s1 = x - i0;
+    s0 = 1 - s1;
+    t1 = y - j0;
+    t0 = 1 - t1;
+    d[ix(i, j)] =
+      s0 * (t0 * d0[ix(i0, j0)] + t1 * d0[ix(i0, j1)]) +
+      s1 * (t0 * d0[ix(i1, j0)] + t1 * d0[ix(i1, j1)]);
+  });
+  set_bnd(N, b, d);
+}
 
 function project(
   N: number,
@@ -160,7 +191,29 @@ function project(
   v: Float32Array,
   p: Float32Array,
   div: Float32Array
-) {}
+) {
+  forEachCell((i, j) => {
+    div[ix(i, j)] =
+      (-0.5 *
+        (u[ix(i + 1, j)] -
+          u[ix(i - 1, j)] +
+          v[ix(i, j + 1)] -
+          v[ix(i, j - 1)])) /
+      N;
+    p[ix(i, j)] = 0;
+  });
+  set_bnd(N, 0, div);
+  set_bnd(N, 0, p);
+
+  lin_solve(N, 0, p, div, 1, 4);
+
+  forEachCell((i, j) => {
+    u[ix(i, j)] -= 0.5 * N * (p[ix(i + 1, j)] - p[ix(i - 1, j)]);
+    v[ix(i, j)] -= 0.5 * N * (p[ix(i, j + 1)] - p[ix(i, j - 1)]);
+  });
+  set_bnd(N, 1, u);
+  set_bnd(N, 2, v);
+}
 
 export function dens_step(
   N: number,
@@ -174,8 +227,8 @@ export function dens_step(
   add_source(N, x, x0, dt);
   swap(x0, x);
   diffuse(N, 0, x, x0, diff, dt);
-  // swap(x0, x);
-  // advect(N, 0, x, x0, u, v, dt);
+  swap(x0, x);
+  advect(N, 0, x, x0, u, v, dt);
 }
 
 export function vel_step(
@@ -186,7 +239,20 @@ export function vel_step(
   v0: Float32Array,
   visc: number,
   dt: number
-) {}
+) {
+  add_source(N, u, u0, dt);
+  add_source(N, v, v0, dt);
+  swap(u0, u);
+  diffuse(N, 1, u, u0, visc, dt);
+  swap(v0, v);
+  diffuse(N, 2, v, v0, visc, dt);
+  project(N, u, v, u0, v0);
+  swap(u0, u);
+  swap(v0, v);
+  advect(N, 1, u, u0, u0, v0, dt);
+  advect(N, 2, v, v0, u0, v0, dt);
+  project(N, u, v, u0, v0);
+}
 
 function get_from_UI(d: Float32Array, u: Float32Array, v: Float32Array) {
   d.fill(0);
@@ -198,10 +264,17 @@ function get_from_UI(d: Float32Array, u: Float32Array, v: Float32Array) {
   const i = Math.floor((mx / win_x) * N) + 1;
   const j = Math.floor((my / win_y) * N) + 1;
 
-  if (mouseRightDown) {
-    d[ix(i, j)] = 100;
-    console.log(i, j);
+  if (mouseLeftDown) {
+    u[ix(i, j)] = force * (mx - omx);
+    v[ix(i, j)] = force * (my - omy);
   }
+
+  if (mouseRightDown) {
+    d[ix(i, j)] = source;
+  }
+
+  omx = mx;
+  omy = my;
 }
 
 function draw_velocity() {}
@@ -243,7 +316,7 @@ function draw() {
   if (drawVel) draw_velocity();
   else draw_density();
 
-  drawGrid();
+  // drawGrid();
 
   ctx.fillStyle = "green";
   ctx.fillText("fps: " + avgFPS.toFixed(2), 5, 15);
@@ -251,7 +324,7 @@ function draw() {
 
 function step() {
   get_from_UI(dens_prev, u_prev, v_prev);
-  // vel_step(N, u, v, u_prev, v_prev, visc, dt);
+  vel_step(N, u, v, u_prev, v_prev, visc, dt);
   dens_step(N, dens, dens_prev, u, v, diff, dt);
 }
 

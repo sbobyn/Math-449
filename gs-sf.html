@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Stable Fluids 2D RGB</title>
+    <title>Stable Fluids 2D Grayscale</title>
     <style>
       canvas {
         background-color: black;
@@ -10,18 +10,11 @@
       }
     </style>
     <script type="module" defer>
-      import { main } from "./build/rgb-sf.js";
+      import { main } from "./build/gs-sf.js";
       window.addEventListener("DOMContentLoaded", main);
     </script>
   </head>
   <body>
     <canvas id="canvas" width="256" height="256"></canvas>
-    <br />
-    <label for="color-select">Change smoke color:</label>
-    <select name="smoke-color" id="color-select">
-      <option value="red" selected>Red</option>
-      <option value="green">Green</option>
-      <option value="blue">Blue</option>
-    </select>
   </body>
 </html>

@@ -27,12 +27,18 @@ let u = new Float32Array(size);
 let v = new Float32Array(size);
 let u_prev = new Float32Array(size);
 let v_prev = new Float32Array(size);
-let dens = new Float32Array(size);
-let dens_prev = new Float32Array(size);
+let r_dens = new Float32Array(size);
+let r_dens_prev = new Float32Array(size);
+let g_dens = new Float32Array(size);
+let g_dens_prev = new Float32Array(size);
+let b_dens = new Float32Array(size);
+let b_dens_prev = new Float32Array(size);
 let tmp = new Float32Array(size);
 
 const canvas = <HTMLCanvasElement>document.getElementById("canvas");
-const ctx: CanvasRenderingContext2D = canvas.getContext("2d")!;
+const ctx: CanvasRenderingContext2D = canvas.getContext("2d", {
+  alpha: false,
+})!;
 const canvasRect = canvas.getBoundingClientRect();
 canvas.addEventListener("mousedown", handleMouseDown);
 canvas.addEventListener("mousemove", handleMouseMove);
@@ -40,6 +46,31 @@ canvas.addEventListener("mouseup", handleMouseUp);
 canvas.addEventListener("contextmenu", function (e: Event) {
   e.preventDefault();
 });
+
+enum SMOKE_COLOR {
+  RED,
+  GREEN,
+  BLUE,
+}
+
+let selectedSmokeColor = SMOKE_COLOR.RED;
+
+const colorMenu = <HTMLSelectElement>document.getElementById("color-select");
+colorMenu.onchange = () => {
+  switch (colorMenu.value) {
+    case "red":
+      selectedSmokeColor = SMOKE_COLOR.RED;
+      break;
+    case "blue":
+      selectedSmokeColor = SMOKE_COLOR.BLUE;
+      break;
+    case "green":
+      selectedSmokeColor = SMOKE_COLOR.GREEN;
+      break;
+    default:
+      break;
+  }
+};
 
 const win_x = canvas.width;
 const win_y = canvas.height;
@@ -117,7 +148,7 @@ function lin_solve(
   a: number,
   c: number
 ) {
-  for (let k = 0; k < 20; k++) {
+  for (let k = 0; k < 10; k++) {
     forEachCell((i, j) => {
       x[ix(i, j)] =
         (x0[ix(i, j)] +
@@ -255,10 +286,6 @@ export function vel_step(
 }
 
 function get_from_UI(d: Float32Array, u: Float32Array, v: Float32Array) {
-  d.fill(0);
-  u.fill(0);
-  v.fill(0);
-
   if (!mouseLeftDown && !mouseRightDown) return;
 
   const i = Math.floor((mx / win_x) * N) + 1;
@@ -285,14 +312,18 @@ function draw_density() {
   forEachCell((i, j) => drawCell(i - 1, j - 1));
 }
 
-function linearToGamma(linearValue: number): number {
-  return Math.sqrt(linearValue);
+function clamp01(x: number): number {
+  return Math.min(1, Math.max(0, x));
 }
 
 function drawCell(i: number, j: number) {
-  let d = linearToGamma(dens[ix(i + 1, j + 1)]);
-  d = Math.floor(255 * d);
-  ctx.fillStyle = `rgb(${d}, ${d}, ${d})`;
+  let r = clamp01(r_dens[ix(i, j)]);
+  r = Math.floor(255 * r);
+  let g = clamp01(g_dens[ix(i, j)]);
+  g = Math.floor(255 * g);
+  let b = clamp01(b_dens[ix(i, j)]);
+  b = Math.floor(255 * b);
+  ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
   ctx.fillRect(i * h, j * h, h, h);
 }
 
@@ -325,9 +356,30 @@ function draw() {
 }
 
 function step() {
-  get_from_UI(dens_prev, u_prev, v_prev);
+  u_prev.fill(0);
+  v_prev.fill(0);
+  r_dens_prev.fill(0);
+  g_dens_prev.fill(0);
+  b_dens_prev.fill(0);
+
+  switch (selectedSmokeColor) {
+    case SMOKE_COLOR.RED:
+      get_from_UI(r_dens_prev, u_prev, v_prev);
+      break;
+    case SMOKE_COLOR.GREEN:
+      get_from_UI(g_dens_prev, u_prev, v_prev);
+      break;
+    case SMOKE_COLOR.BLUE:
+      get_from_UI(b_dens_prev, u_prev, v_prev);
+      break;
+    default:
+      get_from_UI(r_dens_prev, u_prev, v_prev);
+      break;
+  }
   vel_step(N, u, v, u_prev, v_prev, visc, dt);
-  dens_step(N, dens, dens_prev, u, v, diff, dt);
+  dens_step(N, r_dens, r_dens_prev, u, v, diff, dt);
+  dens_step(N, g_dens, g_dens_prev, u, v, diff, dt);
+  dens_step(N, b_dens, b_dens_prev, u, v, diff, dt);
 }
 
 function updateAvgFPS(currFPS: number) {

@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stable Fluids 2D</title>
+    <style>
+      canvas {
+        background-color: black;
+        border: solid black 1px;
+        /* image-rendering: pixelated; */
+      }
+    </style>
+    <body>
+      <canvas id="canvas" width="256" height="256"></canvas>
+      <br />
+      <label for="color-select">Change smoke color:</label>
+      <select name="smoke-color" id="color-select">
+        <option value="red" selected>Red</option>
+        <option value="green">Green</option>
+        <option value="blue">Blue</option>
+      </select>
+    </body>
+  </head>
+</html>
+<script type="module" src="build/rgb-sf.js"></script>

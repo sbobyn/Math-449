@@ -8,8 +8,9 @@ let ctx: CanvasRenderingContext2D;
 
 let win_x: number, win_y: number, h: number;
 
-export function draw_velocity() {
+export function drawVelocityField() {
   ctx.strokeStyle = "red";
+  ctx.fillStyle = "red";
   ctx.lineWidth = 1;
 
   forEachCell(simconfig, (i, j) => drawVector(i, j));
@@ -19,11 +20,31 @@ function drawVector(i: number, j: number) {
   const x0 = (i - 0.5) * h;
   const y0 = (j - 0.5) * h;
 
-  // TODO : change this to bilerp neighbours
   const u = solver.u[ix(i, j, simconfig)] * h;
   const v = solver.v[ix(i, j, simconfig)] * h;
 
-  drawLine(x0, y0, x0 + u, y0 + v);
+  drawArrow(x0, y0, x0 + u, y0 + v);
+}
+
+function drawArrow(x0: number, y0: number, x1: number, y1: number) {
+  drawLine(x0, y0, x1, y1);
+
+  const mag = Math.sqrt((x1 - x0) ** 2 + (y1 - y0) ** 2);
+
+  const arrowHeadLength = Math.min(mag / 3, h / 3);
+
+  const angle = Math.atan2(y1 - y0, x1 - x0);
+  ctx.beginPath();
+  ctx.moveTo(x1, y1);
+  ctx.lineTo(
+    x1 - arrowHeadLength * Math.cos(angle - Math.PI / 8),
+    y1 - arrowHeadLength * Math.sin(angle - Math.PI / 8)
+  );
+  ctx.lineTo(
+    x1 - arrowHeadLength * Math.cos(angle + Math.PI / 8),
+    y1 - arrowHeadLength * Math.sin(angle + Math.PI / 8)
+  );
+  ctx.fill();
 }
 
 export function draw_density() {

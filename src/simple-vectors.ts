@@ -5,7 +5,7 @@ import {
   drawFPS,
   drawGrid,
   draw_density_grayscale,
-  draw_velocity,
+  drawVelocityField,
   initRenderSettings,
 } from "./render-utils.js";
 import { FluidSolver } from "./solver.js";
@@ -21,7 +21,7 @@ function draw() {
   clearCanvas();
   draw_density_grayscale();
   drawGrid();
-  draw_velocity();
+  drawVelocityField();
   drawFPS(avgFPS);
 }
 

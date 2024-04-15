@@ -8,12 +8,26 @@ let ctx: CanvasRenderingContext2D;
 
 let win_x: number, win_y: number, h: number;
 
-function draw_velocity() {}
+export function draw_velocity() {
+  ctx.strokeStyle = "red";
+  ctx.lineWidth = 1;
 
-function drawVector(i: number, j: number) {}
+  forEachCell(simconfig, (i, j) => drawVector(i, j));
+}
+
+function drawVector(i: number, j: number) {
+  const x0 = (i - 0.5) * h;
+  const y0 = (j - 0.5) * h;
+
+  // TODO : change this to bilerp neighbours
+  const u = solver.u[ix(i, j, simconfig)] * h;
+  const v = solver.v[ix(i, j, simconfig)] * h;
+
+  drawLine(x0, y0, x0 + u, y0 + v);
+}
 
 export function draw_density() {
-  forEachCell(simconfig, (i, j) => drawCell(i - 1, j - 1));
+  forEachCell(simconfig, (i, j) => drawCell(i, j));
 }
 
 function drawCell(i: number, j: number) {
@@ -24,18 +38,18 @@ function drawCell(i: number, j: number) {
   let b = clamp01(solver.b_dens[ix(i, j, simconfig)]);
   b = Math.floor(255 * b);
   ctx.fillStyle = `rgb(${r}, ${g}, ${b})`;
-  ctx.fillRect(i * h, j * h, h, h);
+  ctx.fillRect((i - 1) * h, (j - 1) * h, h, h);
 }
 
 export function draw_density_grayscale() {
-  forEachCell(simconfig, (i, j) => drawcell_grayscale(i - 1, j - 1));
+  forEachCell(simconfig, (i, j) => drawcell_grayscale(i, j));
 }
 
 function drawcell_grayscale(i: number, j: number) {
   let r = clamp01(solver.r_dens[ix(i, j, simconfig)]);
   r = Math.floor(255 * r);
   ctx.fillStyle = `rgb(${r}, ${r}, ${r})`;
-  ctx.fillRect(i * h, j * h, h, h);
+  ctx.fillRect((i - 1) * h, (j - 1) * h, h, h);
 }
 
 export function drawLine(x0: number, y0: number, x1: number, y1: number) {
@@ -47,7 +61,7 @@ export function drawLine(x0: number, y0: number, x1: number, y1: number) {
 
 export function drawGrid() {
   ctx.strokeStyle = "gray";
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1;
   // vertical lines
   for (let i = 1; i < simconfig.W; i++) {
     drawLine(i * h, 0, i * h, win_y);

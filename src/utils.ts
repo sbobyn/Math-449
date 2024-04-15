@@ -1,15 +1,15 @@
 import { SimulationConfig } from "./config.js";
 
 export function ix(i: number, j: number, config: SimulationConfig): number {
-  return i + (config.N + 2) * j;
+  return i + (config.W + 2) * j;
 }
 
 export function forEachCell(
   config: SimulationConfig,
   action: (i: number, j: number) => void
 ): void {
-  for (let i = 1; i <= config.N; i++) {
-    for (let j = 1; j <= config.N; j++) {
+  for (let i = 1; i <= config.W; i++) {
+    for (let j = 1; j <= config.H; j++) {
       action(i, j);
     }
   }

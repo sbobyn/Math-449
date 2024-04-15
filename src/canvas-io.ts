@@ -67,8 +67,8 @@ export function get_from_UI(
 ) {
   if (!mouseLeftDown && !mouseRightDown) return;
 
-  const i = Math.floor((mx / win_x) * simconfig.N) + 1;
-  const j = Math.floor((my / win_y) * simconfig.N) + 1;
+  const i = Math.floor((mx / win_x) * simconfig.W) + 1;
+  const j = Math.floor((my / win_y) * simconfig.H) + 1;
 
   if (mouseLeftDown) {
     u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);

@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stable Fluids 2D Rect</title>
+    <style>
+      canvas {
+        background-color: black;
+        border: solid black 1px;
+        /* image-rendering: pixelated; */
+      }
+    </style>
+    <script type="module" defer>
+      import { main } from "./build/rect-sf.js";
+      window.addEventListener("DOMContentLoaded", main);
+    </script>
+  </head>
+  <body>
+    <canvas id="canvas" width="512" height="256"></canvas>
+    <br />
+    <label for="color-select">Change smoke color:</label>
+    <select name="smoke-color" id="color-select">
+      <option value="red" selected>Red</option>
+      <option value="green">Green</option>
+      <option value="blue">Blue</option>
+    </select>
+  </body>
+</html>

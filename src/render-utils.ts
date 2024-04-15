@@ -48,9 +48,13 @@ export function drawLine(x0: number, y0: number, x1: number, y1: number) {
 export function drawGrid() {
   ctx.strokeStyle = "gray";
   ctx.lineWidth = 2;
-  for (let i = 1; i < simconfig.N; i++) {
-    drawLine(0, i * h, win_x, i * h);
+  // vertical lines
+  for (let i = 1; i < simconfig.W; i++) {
     drawLine(i * h, 0, i * h, win_y);
+  }
+  // horizontal lines
+  for (let j = 1; j < simconfig.H; j++) {
+    drawLine(0, j * h, win_x, j * h);
   }
 }
 
@@ -75,5 +79,5 @@ export function initRenderSettings(
   ctx.font = "15px sans-serif";
   win_x = canvas.width;
   win_y = canvas.height;
-  h = win_x / simconfig.N;
+  h = win_x / simconfig.W;
 }

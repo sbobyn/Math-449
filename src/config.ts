@@ -1,6 +1,7 @@
 // Simulation Parameters
 export class SimulationConfig {
-  N: number;
+  W: number;
+  H: number;
   dt: number;
   diff: number;
   visc: number;
@@ -8,14 +9,16 @@ export class SimulationConfig {
   source: number;
 
   constructor(
-    N: number = 64,
+    W: number = 64,
+    H: number = 64,
     dt: number = 1 / 10.0,
     diff: number = 0.0001,
     visc: number = 0.0,
     force: number = 5.0,
     source: number = 100.0
   ) {
-    this.N = N;
+    this.W = W;
+    this.H = H;
     this.dt = dt;
     this.diff = diff;
     this.visc = visc;
@@ -24,7 +27,7 @@ export class SimulationConfig {
   }
 
   size(): number {
-    return (this.N + 2) * (this.N + 2);
+    return (this.W + 2) * (this.H + 2);
   }
 }
 

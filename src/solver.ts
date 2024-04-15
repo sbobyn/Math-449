@@ -117,14 +117,13 @@ export class FluidSolver {
       t0: number,
       s1: number,
       t1: number,
-      dtW0: number,
-      dtH0: number;
+      dth;
 
-    dtW0 = this.config.dt * this.config.W;
-    dtH0 = this.config.dt * this.config.H;
+    dth = this.config.dt * this.config.H;
+
     forEachCell(this.config, (i, j) => {
-      x = i - dtW0 * u[ix(i, j, this.config)];
-      y = j - dtH0 * v[ix(i, j, this.config)];
+      x = i - dth * u[ix(i, j, this.config)];
+      y = j - dth * v[ix(i, j, this.config)];
       if (x < 0.5) x = 0.5;
       if (x > this.config.W + 0.5) x = this.config.W + 0.5;
       i0 = Math.floor(x);
@@ -153,14 +152,15 @@ export class FluidSolver {
     p: Float32Array,
     div: Float32Array
   ) {
-    const hx = 1 / this.config.W;
-    const hy = 1 / this.config.H;
+    const h = 1 / this.config.H;
 
     forEachCell(this.config, (i, j) => {
       div[ix(i, j, this.config)] =
         -0.5 *
-        (hx * (u[ix(i + 1, j, this.config)] - u[ix(i - 1, j, this.config)]) +
-          hy * (v[ix(i, j + 1, this.config)] - v[ix(i, j - 1, this.config)]));
+        h *
+        (u[ix(i + 1, j, this.config)] -
+          u[ix(i - 1, j, this.config)] +
+          (v[ix(i, j + 1, this.config)] - v[ix(i, j - 1, this.config)]));
       p[ix(i, j, this.config)] = 0;
     });
     this.set_bnd(0, div);

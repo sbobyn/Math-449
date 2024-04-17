@@ -1,6 +1,8 @@
 # Readme
 
-This repo contains the code for my final project for Math 449: Scientific Computing. Contained is an implementation and some simple demos of the Stable Fluids simulation introduced by Jos Stam in 1999.
+This repo contains the code for my final project for Math 449: Scientific Computing.
+Contained is an implementation and some simple demos of the [Stable Fluids](https://pages.cs.wisc.edu/~chaol/data/cs777/stam-stable_fluids.pdf) simulation introduced by Jos Stam in 1999.
+The implementation is based off of the implementation provided in Stam's 2003 paper [Real-Time Fluid Dynamics for Games](http://graphics.cs.cmu.edu/nsp/course/15-464/Fall09/papers/StamFluidforGames.pdf)
 
 - _Live Demo:_ https://sbobyn.github.io/Math-449/
 

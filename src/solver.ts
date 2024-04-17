@@ -36,11 +36,11 @@ export class FluidSolver {
     x.set(this.tmp);
   }
 
-  private add_source(x: Float32Array, s: Float32Array) {
+  private addSource(x: Float32Array, s: Float32Array) {
     for (let i = 0; i < this.config.size(); i++) x[i] += this.config.dt * s[i];
   }
 
-  private set_bnd(b: number, x: Float32Array) {
+  private setBoundaries(b: number, x: Float32Array) {
     // horizontal bnds
     for (let i = 1; i <= this.config.W; i++) {
       x[ix(i, 0, this.config)] =
@@ -76,7 +76,7 @@ export class FluidSolver {
         x[ix(this.config.W + 1, this.config.H, this.config)]);
   }
 
-  private lin_solve(
+  private linSolve(
     b: number,
     x: Float32Array,
     x0: Float32Array,
@@ -94,13 +94,13 @@ export class FluidSolver {
                 x[ix(i, j + 1, this.config)])) /
           c;
       });
-      this.set_bnd(b, x);
+      this.setBoundaries(b, x);
     }
   }
 
   private diffuse(b: number, x: Float32Array, x0: Float32Array) {
     let a = this.config.dt * this.config.diff * this.config.W * this.config.H;
-    this.lin_solve(b, x, x0, a, 1 + 4 * a);
+    this.linSolve(b, x, x0, a, 1 + 4 * a);
   }
 
   private advect(
@@ -143,7 +143,7 @@ export class FluidSolver {
         s1 *
           (t0 * d0[ix(i1, j0, this.config)] + t1 * d0[ix(i1, j1, this.config)]);
     });
-    this.set_bnd(b, d);
+    this.setBoundaries(b, d);
   }
 
   private project(
@@ -163,10 +163,10 @@ export class FluidSolver {
           (v[ix(i, j + 1, this.config)] - v[ix(i, j - 1, this.config)]));
       p[ix(i, j, this.config)] = 0;
     });
-    this.set_bnd(0, div);
-    this.set_bnd(0, p);
+    this.setBoundaries(0, div);
+    this.setBoundaries(0, p);
 
-    this.lin_solve(0, p, div, 1, 4);
+    this.linSolve(0, p, div, 1, 4);
 
     forEachCell(this.config, (i, j) => {
       u[ix(i, j, this.config)] -=
@@ -178,27 +178,27 @@ export class FluidSolver {
         this.config.H *
         (p[ix(i, j + 1, this.config)] - p[ix(i, j - 1, this.config)]);
     });
-    this.set_bnd(1, u);
-    this.set_bnd(2, v);
+    this.setBoundaries(1, u);
+    this.setBoundaries(2, v);
   }
 
-  private dens_step(x: Float32Array, x0: Float32Array) {
-    this.add_source(x, x0);
+  private densStep(x: Float32Array, x0: Float32Array) {
+    this.addSource(x, x0);
     this.swap(x0, x);
     this.diffuse(0, x, x0);
     this.swap(x0, x);
     this.advect(0, x, x0, this.u, this.v);
   }
 
-  dens_steps() {
-    this.dens_step(this.r_dens, this.r_dens_prev);
-    this.dens_step(this.g_dens, this.g_dens_prev);
-    this.dens_step(this.b_dens, this.b_dens_prev);
+  densSteps() {
+    this.densStep(this.r_dens, this.r_dens_prev);
+    this.densStep(this.g_dens, this.g_dens_prev);
+    this.densStep(this.b_dens, this.b_dens_prev);
   }
 
-  vel_step() {
-    this.add_source(this.u, this.u_prev);
-    this.add_source(this.v, this.v_prev);
+  velStep() {
+    this.addSource(this.u, this.u_prev);
+    this.addSource(this.v, this.v_prev);
     this.swap(this.u_prev, this.u);
     this.diffuse(1, this.u, this.u_prev);
     this.swap(this.v_prev, this.v);

@@ -28,8 +28,8 @@ function step() {
 
   get_from_UI(solver.r_dens_prev, solver.u_prev, solver.v_prev, simconfig);
 
-  solver.vel_step();
-  solver.dens_steps();
+  solver.velStep();
+  solver.densSteps();
 }
 
 function run(now: number) {

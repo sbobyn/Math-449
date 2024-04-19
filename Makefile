@@ -7,3 +7,6 @@ build: src/*
 
 clean:
 	rm -rf build
+
+deploy:
+	./deploy.sh

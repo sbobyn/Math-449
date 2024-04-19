@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Stable Fluids 2D RGB</title>
+    <title>Stable Fluids 2D Rect</title>
     <style>
       canvas {
         background-color: black;
@@ -10,12 +10,12 @@
       }
     </style>
     <script type="module" defer>
-      import { main } from "./dist/rgb-sf.js";
+      import { main } from "./rect-sf.js";
       window.addEventListener("DOMContentLoaded", main);
     </script>
   </head>
   <body>
-    <canvas id="canvas" width="512" height="512"></canvas>
+    <canvas id="canvas" width="1024" height="512"></canvas>
     <br />
     <label for="color-select">Change smoke color:</label>
     <select name="smoke-color" id="color-select">

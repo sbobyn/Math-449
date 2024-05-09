@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Stable Fluids 2D Rect</title>
+    <title>Stable Fluids 2D Grayscale</title>
     <style>
       canvas {
         background-color: black;
@@ -10,19 +10,12 @@
       }
     </style>
     <script type="module" defer>
-      import { main } from "./rect-sf.js";
+      import { main } from "./js/demos/simple-vectors.js";
       window.addEventListener("DOMContentLoaded", main);
     </script>
   </head>
   <body>
-    <canvas id="canvas" width="1024" height="512"></canvas>
-    <br />
-    <label for="color-select">Change smoke color:</label>
-    <select name="smoke-color" id="color-select">
-      <option value="red" selected>Red</option>
-      <option value="green">Green</option>
-      <option value="blue">Blue</option>
-    </select>
+    <canvas id="canvas" width="512" height="512"></canvas>
     <h2>Simulation Controls</h2>
     <ul>
       <li>Right click: add smoke to a simulation</li>

@@ -1,5 +1,5 @@
-import { addIOtoCanvas, get_from_UI } from "./canvas-io.js";
-import { SimulationConfig } from "./config.js";
+import { addIOtoCanvas, get_from_UI } from "../canvas-io.js";
+import { SimulationConfig } from "../config.js";
 import {
   clearCanvas,
   drawFPS,
@@ -7,9 +7,9 @@ import {
   draw_density_grayscale,
   drawVelocityField,
   initRenderSettings,
-} from "./render-utils.js";
-import { FluidSolver } from "./solver.js";
-import { avgFPS, updateAvgFPS } from "./utils.js";
+} from "../render-utils.js";
+import { FluidSolver } from "../solver.js";
+import { avgFPS, updateAvgFPS } from "../utils.js";
 
 // global vars
 let prevTime: number;

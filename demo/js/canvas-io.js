@@ -59,3 +59,24 @@ export function get_from_UI(d, u, v, simconfig) {
     omx = mx;
     omy = my;
 }
+export function get_vel_from_UI(u, v, simconfig) {
+    if (!mouseLeftDown)
+        return;
+    const i = Math.floor((mx / win_x) * simconfig.W) + 1;
+    const j = Math.floor((my / win_y) * simconfig.H) + 1;
+    if (mouseLeftDown) {
+        u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);
+        v[ix(i, j, simconfig)] = simconfig.force * (my - omy);
+    }
+    omx = mx;
+    omy = my;
+}
+export function get_RGB_from_UI(r, g, b, rmult, gmult, bmult, simconfig) {
+    if (!mouseRightDown)
+        return;
+    const i = Math.floor((mx / win_x) * simconfig.W) + 1;
+    const j = Math.floor((my / win_y) * simconfig.H) + 1;
+    r[ix(i, j, simconfig)] = simconfig.source * rmult;
+    g[ix(i, j, simconfig)] = simconfig.source * gmult;
+    b[ix(i, j, simconfig)] = simconfig.source * bmult;
+}

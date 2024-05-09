@@ -83,7 +83,7 @@ export class FluidSolver {
     a: number,
     c: number
   ) {
-    for (let k = 0; k < 20; k++) {
+    for (let k = 0; k < this.config.numIterations; k++) {
       forEachCell(this.config, (i, j) => {
         x[ix(i, j, this.config)] =
           (x0[ix(i, j, this.config)] +
@@ -188,7 +188,7 @@ export class FluidSolver {
     this.diffuse(0, x, x0);
     this.swap(x0, x);
     this.advect(0, x, x0, this.u, this.v);
-    x.map((_, i) => (x[i] *= 0.99));
+    x.map((_, i) => (x[i] *= this.config.density_dissipation));
   }
 
   densSteps() {

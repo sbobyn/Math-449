@@ -7,6 +7,8 @@ export class SimulationConfig {
   visc: number;
   force: number;
   source: number;
+  density_dissipation: number;
+  numIterations: number = 20;
 
   constructor(
     W: number = 64,
@@ -15,7 +17,8 @@ export class SimulationConfig {
     diff: number = 0.0001,
     visc: number = 0.0,
     force: number = 5.0,
-    source: number = 100.0
+    source: number = 100.0,
+    density_dissipation: number = 0.99
   ) {
     this.W = W;
     this.H = H;
@@ -24,6 +27,7 @@ export class SimulationConfig {
     this.visc = visc;
     this.force = force;
     this.source = source;
+    this.density_dissipation = density_dissipation;
   }
 
   size(): number {

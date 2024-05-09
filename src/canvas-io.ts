@@ -82,3 +82,41 @@ export function get_from_UI(
   omx = mx;
   omy = my;
 }
+
+export function get_vel_from_UI(
+  u: Float32Array,
+  v: Float32Array,
+  simconfig: SimulationConfig
+) {
+  if (!mouseLeftDown) return;
+
+  const i = Math.floor((mx / win_x) * simconfig.W) + 1;
+  const j = Math.floor((my / win_y) * simconfig.H) + 1;
+
+  if (mouseLeftDown) {
+    u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);
+    v[ix(i, j, simconfig)] = simconfig.force * (my - omy);
+  }
+
+  omx = mx;
+  omy = my;
+}
+
+export function get_RGB_from_UI(
+  r: Float32Array,
+  g: Float32Array,
+  b: Float32Array,
+  rmult: number,
+  gmult: number,
+  bmult: number,
+  simconfig: SimulationConfig
+) {
+  if (!mouseRightDown) return;
+
+  const i = Math.floor((mx / win_x) * simconfig.W) + 1;
+  const j = Math.floor((my / win_y) * simconfig.H) + 1;
+
+  r[ix(i, j, simconfig)] = simconfig.source * rmult;
+  g[ix(i, j, simconfig)] = simconfig.source * gmult;
+  b[ix(i, j, simconfig)] = simconfig.source * bmult;
+}

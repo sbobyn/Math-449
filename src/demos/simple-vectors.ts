@@ -49,7 +49,7 @@ export function main() {
   prevTime = performance.now();
 
   // init simulator
-  simconfig = new SimulationConfig(16, 16);
+  simconfig = new SimulationConfig(24, 16);
   solver = new FluidSolver(simconfig);
 
   // init canvas

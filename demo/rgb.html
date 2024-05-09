@@ -23,5 +23,32 @@
       <li>Right click: add smoke to a simulation</li>
       <li>Left click and drag: change the velocity field</li>
     </ul>
+    <h2>Settings</h2>
+    <ul>
+      <li>
+        <label for="numIterations">Number of iterations:</label>
+        <input id="numIterations" type="range" min="1" max="50" value="20" />
+        <span id="numIterationsValue">20</span>
+      </li>
+      <li>
+        <label for="dissipation">Dissipation Coefficient:</label>
+        <input
+          id="dissipation"
+          type="range"
+          min="0.99"
+          max="1"
+          step="0.001"
+          value="0.999"
+        />
+        <span id="dissipationValue">0.999</span>
+      </li>
+      <li>
+        <label for="boundarySelect">Boundary Conditions:</label>
+        <select id="boundarySelect">
+          <option value="box">Box</option>
+          <option value="periodic">Periodic</option>
+        </select>
+      </li>
+    </ul>
   </body>
 </html>

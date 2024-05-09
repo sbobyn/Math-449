@@ -1,5 +1,11 @@
-import { SimulationConfig } from "./config.js";
+import { BoundaryConditions, SimulationConfig } from "./config.js";
 import { ix, forEachCell } from "./utils.js";
+
+enum ArrayType {
+  DENS = 0,
+  U = 1,
+  V = 2,
+}
 
 export class FluidSolver {
   u: Float32Array;
@@ -40,44 +46,74 @@ export class FluidSolver {
     for (let i = 0; i < this.config.size(); i++) x[i] += this.config.dt * s[i];
   }
 
-  private setBoundaries(b: number, x: Float32Array) {
+  // Dirichlet for density (b == 0)
+  // Neumann for vertical velocity (b == 1)
+  // Neumann for horizontal velocity (b == 2)
+  private setBoundariesBox(type: ArrayType, x: Float32Array) {
+    const W = this.config.W;
+    const H = this.config.H;
+
     // horizontal bnds
-    for (let i = 1; i <= this.config.W; i++) {
+    for (let i = 1; i <= W; i++) {
       x[ix(i, 0, this.config)] =
-        b === 2 ? -x[ix(i, 1, this.config)] : x[ix(i, 1, this.config)];
-      x[ix(i, this.config.H + 1, this.config)] =
-        b === 2
-          ? -x[ix(i, this.config.H, this.config)]
-          : x[ix(i, this.config.H, this.config)];
+        type == 2 ? -x[ix(i, 1, this.config)] : x[ix(i, 1, this.config)];
+      x[ix(i, H + 1, this.config)] =
+        type == 2 ? -x[ix(i, H, this.config)] : x[ix(i, H, this.config)];
     }
     // vertical bnds
-    for (let j = 1; j <= this.config.H; j++) {
+    for (let j = 1; j <= H; j++) {
       x[ix(0, j, this.config)] =
-        b === 1 ? -x[ix(1, j, this.config)] : x[ix(1, j, this.config)];
-      x[ix(this.config.W + 1, j, this.config)] =
-        b === 1
-          ? -x[ix(this.config.W, j, this.config)]
-          : x[ix(this.config.W, j, this.config)];
+        type == 1 ? -x[ix(1, j, this.config)] : x[ix(1, j, this.config)];
+      x[ix(W + 1, j, this.config)] =
+        type == 1 ? -x[ix(W, j, this.config)] : x[ix(W, j, this.config)];
     }
     // corners
     x[ix(0, 0, this.config)] =
       0.5 * (x[ix(1, 0, this.config)] + x[ix(0, 1, this.config)]);
-    x[ix(0, this.config.H + 1, this.config)] =
-      0.5 *
-      (x[ix(1, this.config.H + 1, this.config)] +
-        x[ix(0, this.config.H, this.config)]);
-    x[ix(this.config.W + 1, 0, this.config)] =
-      0.5 *
-      (x[ix(this.config.W, 0, this.config)] +
-        x[ix(this.config.W + 1, 1, this.config)]);
-    x[ix(this.config.W + 1, this.config.H + 1, this.config)] =
-      0.5 *
-      (x[ix(this.config.W, this.config.H + 1, this.config)] +
-        x[ix(this.config.W + 1, this.config.H, this.config)]);
+    x[ix(0, H + 1, this.config)] =
+      0.5 * (x[ix(1, H + 1, this.config)] + x[ix(0, H, this.config)]);
+    x[ix(W + 1, 0, this.config)] =
+      0.5 * (x[ix(W, 0, this.config)] + x[ix(W + 1, 1, this.config)]);
+    x[ix(W + 1, H + 1, this.config)] =
+      0.5 * (x[ix(W, H + 1, this.config)] + x[ix(W + 1, H, this.config)]);
+  }
+
+  private setBoundariesPeriodic(x: Float32Array) {
+    const W = this.config.W;
+    const H = this.config.H;
+
+    // Connect horizontal edges
+    for (let i = 1; i <= W; i++) {
+      x[ix(i, 0, this.config)] = x[ix(i, H, this.config)]; // Bottom to top
+      x[ix(i, H + 1, this.config)] = x[ix(i, 1, this.config)]; // Top to bottom
+    }
+
+    // Connect vertical edges
+    for (let j = 1; j <= H; j++) {
+      x[ix(0, j, this.config)] = x[ix(W, j, this.config)]; // Left to right
+      x[ix(W + 1, j, this.config)] = x[ix(1, j, this.config)]; // Right to left
+    }
+
+    // Connect corners
+    x[ix(0, 0, this.config)] = x[ix(W, H, this.config)];
+    x[ix(0, H + 1, this.config)] = x[ix(W, 1, this.config)];
+    x[ix(W + 1, 0, this.config)] = x[ix(1, H, this.config)];
+    x[ix(W + 1, H + 1, this.config)] = x[ix(1, 1, this.config)];
+  }
+
+  private setBoundaries(b: ArrayType, x: Float32Array) {
+    switch (this.config.boundaryConditions) {
+      case BoundaryConditions.BOX:
+        this.setBoundariesBox(b, x);
+        break;
+      case BoundaryConditions.PERIODIC:
+        this.setBoundariesPeriodic(x);
+        break;
+    }
   }
 
   private linSolve(
-    b: number,
+    b: ArrayType,
     x: Float32Array,
     x0: Float32Array,
     a: number,
@@ -98,13 +134,13 @@ export class FluidSolver {
     }
   }
 
-  private diffuse(b: number, x: Float32Array, x0: Float32Array) {
+  private diffuse(b: ArrayType, x: Float32Array, x0: Float32Array) {
     let a = this.config.dt * this.config.diff * this.config.W * this.config.H;
     this.linSolve(b, x, x0, a, 1 + 4 * a);
   }
 
   private advect(
-    b: number,
+    b: ArrayType,
     d: Float32Array,
     d0: Float32Array,
     u: Float32Array,
@@ -163,10 +199,10 @@ export class FluidSolver {
           (v[ix(i, j + 1, this.config)] - v[ix(i, j - 1, this.config)]));
       p[ix(i, j, this.config)] = 0;
     });
-    this.setBoundaries(0, div);
-    this.setBoundaries(0, p);
+    this.setBoundaries(ArrayType.DENS, div);
+    this.setBoundaries(ArrayType.DENS, p);
 
-    this.linSolve(0, p, div, 1, 4);
+    this.linSolve(ArrayType.DENS, p, div, 1, 4);
 
     forEachCell(this.config, (i, j) => {
       u[ix(i, j, this.config)] -=
@@ -178,16 +214,16 @@ export class FluidSolver {
         this.config.H *
         (p[ix(i, j + 1, this.config)] - p[ix(i, j - 1, this.config)]);
     });
-    this.setBoundaries(1, u);
-    this.setBoundaries(2, v);
+    this.setBoundaries(ArrayType.U, u);
+    this.setBoundaries(ArrayType.V, v);
   }
 
   private densStep(x: Float32Array, x0: Float32Array) {
     this.addSource(x, x0);
     this.swap(x0, x);
-    this.diffuse(0, x, x0);
+    this.diffuse(ArrayType.DENS, x, x0);
     this.swap(x0, x);
-    this.advect(0, x, x0, this.u, this.v);
+    this.advect(ArrayType.DENS, x, x0, this.u, this.v);
     x.map((_, i) => (x[i] *= this.config.density_dissipation));
   }
 
@@ -201,14 +237,14 @@ export class FluidSolver {
     this.addSource(this.u, this.u_prev);
     this.addSource(this.v, this.v_prev);
     this.swap(this.u_prev, this.u);
-    this.diffuse(1, this.u, this.u_prev);
+    this.diffuse(ArrayType.U, this.u, this.u_prev);
     this.swap(this.v_prev, this.v);
-    this.diffuse(2, this.v, this.v_prev);
+    this.diffuse(ArrayType.V, this.v, this.v_prev);
     this.project(this.u, this.v, this.u_prev, this.v_prev);
     this.swap(this.u_prev, this.u);
     this.swap(this.v_prev, this.v);
-    this.advect(1, this.u, this.u_prev, this.u_prev, this.v_prev);
-    this.advect(2, this.v, this.v_prev, this.u_prev, this.v_prev);
+    this.advect(ArrayType.U, this.u, this.u_prev, this.u_prev, this.v_prev);
+    this.advect(ArrayType.V, this.v, this.v_prev, this.u_prev, this.v_prev);
     this.project(this.u, this.v, this.u_prev, this.v_prev);
   }
 }

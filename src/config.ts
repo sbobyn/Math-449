@@ -1,3 +1,8 @@
+export enum BoundaryConditions {
+  BOX,
+  PERIODIC,
+}
+
 // Simulation Parameters
 export class SimulationConfig {
   W: number;
@@ -9,6 +14,7 @@ export class SimulationConfig {
   source: number;
   density_dissipation: number;
   numIterations: number = 20;
+  boundaryConditions: BoundaryConditions = BoundaryConditions.BOX;
 
   constructor(
     W: number = 64,

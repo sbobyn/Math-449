@@ -3,7 +3,7 @@ import {
   get_RGB_from_UI,
   get_vel_from_UI,
 } from "../canvas-io.js";
-import { SimulationConfig } from "../config.js";
+import { BoundaryConditions, SimulationConfig } from "../config.js";
 import {
   clearCanvas,
   drawFPS,
@@ -12,6 +12,42 @@ import {
 } from "../render-utils.js";
 import { FluidSolver } from "../solver.js";
 import { avgFPS, updateAvgFPS } from "../utils.js";
+
+const numIterSlider = document.getElementById(
+  "numIterations"
+) as HTMLInputElement;
+const numIterSpan = document.getElementById(
+  "numIterationsValue"
+) as HTMLSpanElement;
+const dissipationSlider = document.getElementById(
+  "dissipation"
+) as HTMLInputElement;
+const dissipationSpan = document.getElementById(
+  "dissipationValue"
+) as HTMLSpanElement;
+
+const boundarySelect = document.getElementById(
+  "boundarySelect"
+) as HTMLSelectElement;
+
+numIterSlider.oninput = function () {
+  simconfig.numIterations = parseInt(numIterSlider.value);
+  numIterSpan.textContent = numIterSlider.value;
+};
+dissipationSlider.oninput = function () {
+  simconfig.density_dissipation = parseFloat(dissipationSlider.value);
+  dissipationSpan.textContent = simconfig.density_dissipation.toFixed(3);
+};
+boundarySelect.oninput = function () {
+  switch (boundarySelect.value) {
+    case "box":
+      simconfig.boundaryConditions = BoundaryConditions.BOX;
+      break;
+    case "periodic":
+      simconfig.boundaryConditions = BoundaryConditions.PERIODIC;
+      break;
+  }
+};
 
 // global vars
 let prevTime: number;
@@ -74,8 +110,11 @@ export function main() {
 
   // init simulator
   simconfig = new SimulationConfig(83, 64);
-  simconfig.density_dissipation = 0.995;
-  simconfig.numIterations = 40;
+  // call input handlers to init values
+  numIterSlider.dispatchEvent(new Event("input"));
+  dissipationSlider.dispatchEvent(new Event("input"));
+  boundarySelect.dispatchEvent(new Event("input"));
+
   solver = new FluidSolver(simconfig);
 
   // init canvas

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stable Fluids 2D RGB</title>
+    <style>
+      canvas {
+        background-color: black;
+        border: solid black 1px;
+        /* image-rendering: pixelated; */
+      }
+    </style>
+    <script type="module" defer>
+      import { main } from "./js/demos/wind-tunnel.js";
+      window.addEventListener("DOMContentLoaded", main);
+    </script>
+  </head>
+  <body>
+    <canvas id="canvas" width="1024" height="512"></canvas>
+    <br />
+
+    <h2>Simulation Controls</h2>
+    <ul>
+      <li>Right click: add smoke to a simulation</li>
+      <li>Left click and drag: change the velocity field</li>
+    </ul>
+    <h2>Settings</h2>
+    <ul>
+      <li>
+        <label for="numIterations">Number of iterations:</label>
+        <input id="numIterations" type="range" min="1" max="50" value="40" />
+        <span id="numIterationsValue">20</span>
+      </li>
+    </ul>
+  </body>
+</html>

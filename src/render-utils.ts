@@ -1,4 +1,5 @@
 import { SimulationConfig } from "./config.js";
+import { Obstacle } from "./obstacle.js";
 import { FluidSolver } from "./solver.js";
 import { ix, forEachCell, clamp01 } from "./utils.js";
 
@@ -115,4 +116,17 @@ export function initRenderSettings(
   win_x = canvas.width;
   win_y = canvas.height;
   h = win_x / simconfig.W;
+}
+
+export function drawObstacle(obstacle: Obstacle) {
+  ctx.fillStyle = "grey";
+  ctx.strokeStyle = "white";
+  ctx.beginPath();
+  // convert from grid to pixel coordinates
+  const x = (obstacle.x - 0.5) * h;
+  const y = (obstacle.y - 0.5) * h;
+  const radius = obstacle.radius * h;
+  ctx.arc(x, y, radius, 0, 2 * Math.PI);
+  ctx.fill();
+  ctx.stroke();
 }

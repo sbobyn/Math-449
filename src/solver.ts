@@ -1,4 +1,5 @@
 import { BoundaryConditions, SimulationConfig } from "./config.js";
+import { Obstacle } from "./obstacle.js";
 import { ix, forEachCell } from "./utils.js";
 
 enum ArrayType {
@@ -19,6 +20,7 @@ export class FluidSolver {
   b_dens: Float32Array;
   b_dens_prev: Float32Array;
   tmp: Float32Array;
+  obstacle: Float32Array;
   config: SimulationConfig;
 
   constructor(config: SimulationConfig) {
@@ -33,7 +35,19 @@ export class FluidSolver {
     this.b_dens = new Float32Array(config.size());
     this.b_dens_prev = new Float32Array(config.size());
     this.tmp = new Float32Array(config.size());
+    this.obstacle = new Float32Array(config.size());
     this.config = config;
+  }
+
+  public setObstacle(obstacle: Obstacle) {
+    this.obstacle.fill(0);
+    for (let i = 0; i < this.config.W; i++) {
+      for (let j = 0; j < this.config.H; j++) {
+        const d2 = (i - obstacle.x) ** 2 + (j - obstacle.y) ** 2;
+        if (d2 < (obstacle.radius + 1) ** 2)
+          this.obstacle[ix(i, j, this.config)] = 1;
+      }
+    }
   }
 
   private swap(x0: Float32Array, x: Float32Array) {
@@ -47,8 +61,8 @@ export class FluidSolver {
   }
 
   // Dirichlet for density (b == 0)
-  // Neumann for vertical velocity (b == 1)
-  // Neumann for horizontal velocity (b == 2)
+  // Neumann for vertical velocity (b ArrayType.I)
+  // Neumann for horizontal velocity (b == ArrayType.V)
   private setBoundariesBox(type: ArrayType, x: Float32Array) {
     const W = this.config.W;
     const H = this.config.H;
@@ -56,16 +70,24 @@ export class FluidSolver {
     // horizontal bnds
     for (let i = 1; i <= W; i++) {
       x[ix(i, 0, this.config)] =
-        type == 2 ? -x[ix(i, 1, this.config)] : x[ix(i, 1, this.config)];
+        type == ArrayType.V
+          ? -x[ix(i, 1, this.config)]
+          : x[ix(i, 1, this.config)];
       x[ix(i, H + 1, this.config)] =
-        type == 2 ? -x[ix(i, H, this.config)] : x[ix(i, H, this.config)];
+        type == ArrayType.V
+          ? -x[ix(i, H, this.config)]
+          : x[ix(i, H, this.config)];
     }
     // vertical bnds
     for (let j = 1; j <= H; j++) {
       x[ix(0, j, this.config)] =
-        type == 1 ? -x[ix(1, j, this.config)] : x[ix(1, j, this.config)];
+        type == ArrayType.U
+          ? -x[ix(1, j, this.config)]
+          : x[ix(1, j, this.config)];
       x[ix(W + 1, j, this.config)] =
-        type == 1 ? -x[ix(W, j, this.config)] : x[ix(W, j, this.config)];
+        type == ArrayType.U
+          ? -x[ix(W, j, this.config)]
+          : x[ix(W, j, this.config)];
     }
     // corners
     x[ix(0, 0, this.config)] =
@@ -101,6 +123,42 @@ export class FluidSolver {
     x[ix(W + 1, H + 1, this.config)] = x[ix(1, 1, this.config)];
   }
 
+  private setBoundariesWindTunnel(b: ArrayType, x: Float32Array) {
+    const W = this.config.W;
+    const H = this.config.H;
+
+    // box BCs for top and bottom bounds
+    for (let i = 1; i <= W; i++) {
+      x[ix(i, 0, this.config)] =
+        b == ArrayType.V ? -x[ix(i, 1, this.config)] : x[ix(i, 1, this.config)];
+      x[ix(i, H + 1, this.config)] =
+        b == ArrayType.V ? -x[ix(i, H, this.config)] : x[ix(i, H, this.config)];
+    }
+
+    // inflow BCs
+    if (b == ArrayType.U) {
+      for (let j = 1; j <= H; j++) {
+        x[ix(0, j, this.config)] = this.config.inflowVelocity;
+      }
+    }
+
+    // outflow BCs
+
+    for (let i = 1; i <= W; i++) {
+      x[ix(i, H + 1, this.config)] = x[ix(i, H, this.config)];
+    }
+  }
+
+  private setBoundariesObstacle(x: Float32Array) {
+    for (let i = 0; i < this.config.W; i++) {
+      for (let j = 0; j < this.config.H; j++) {
+        if (this.obstacle[ix(i, j, this.config)] == 1) {
+          x[ix(i, j, this.config)] = 0;
+        }
+      }
+    }
+  }
+
   private setBoundaries(b: ArrayType, x: Float32Array) {
     switch (this.config.boundaryConditions) {
       case BoundaryConditions.BOX:
@@ -108,6 +166,10 @@ export class FluidSolver {
         break;
       case BoundaryConditions.PERIODIC:
         this.setBoundariesPeriodic(x);
+        break;
+      case BoundaryConditions.WINDTUNNEL:
+        this.setBoundariesWindTunnel(b, x);
+        this.setBoundariesObstacle(x);
         break;
     }
   }
@@ -121,14 +183,16 @@ export class FluidSolver {
   ) {
     for (let k = 0; k < this.config.numIterations; k++) {
       forEachCell(this.config, (i, j) => {
-        x[ix(i, j, this.config)] =
-          (x0[ix(i, j, this.config)] +
-            a *
-              (x[ix(i - 1, j, this.config)] +
-                x[ix(i + 1, j, this.config)] +
-                x[ix(i, j - 1, this.config)] +
-                x[ix(i, j + 1, this.config)])) /
-          c;
+        if (!(this.obstacle[ix(i, j, this.config)] == 1)) {
+          x[ix(i, j, this.config)] =
+            (x0[ix(i, j, this.config)] +
+              a *
+                (x[ix(i - 1, j, this.config)] +
+                  x[ix(i + 1, j, this.config)] +
+                  x[ix(i, j - 1, this.config)] +
+                  x[ix(i, j + 1, this.config)])) /
+            c;
+        }
       });
       this.setBoundaries(b, x);
     }

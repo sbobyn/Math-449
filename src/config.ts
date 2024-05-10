@@ -1,6 +1,7 @@
 export enum BoundaryConditions {
   BOX,
   PERIODIC,
+  WINDTUNNEL,
 }
 
 // Simulation Parameters
@@ -15,6 +16,7 @@ export class SimulationConfig {
   density_dissipation: number;
   numIterations: number = 20;
   boundaryConditions: BoundaryConditions = BoundaryConditions.BOX;
+  inflowVelocity: number = 0.0;
 
   constructor(
     W: number = 64,

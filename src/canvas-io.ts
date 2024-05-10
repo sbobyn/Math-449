@@ -14,7 +14,12 @@ let canvasRect: DOMRect;
 let win_x: number;
 let win_y: number;
 
+function updateCanvasRect(canvas: HTMLCanvasElement) {
+  canvasRect = canvas.getBoundingClientRect();
+}
+
 function handleMouseDown(e: MouseEvent) {
+  updateCanvasRect(e.target as HTMLCanvasElement);
   if (e.button != 0 && e.button != 2) return;
 
   mouseLeftDown = e.button == 0;

@@ -13,9 +13,8 @@ git merge main -m "Merge main into gh-pages"
 
 echo -e "\nCleaning and building new changes..."
 rm -rf build
-rm demo/js/*
+rm -rf demo/js/
 make
-mkdir -p build
 cp -r demo build
 
 echo -e "\nAdding all changes to git..."

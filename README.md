@@ -6,7 +6,7 @@ The implementation closely follows the one described in the paper [Real-Time Flu
 
 The implementation is written entirely in TypeScript on the CPU and rendered with the HTML canvas API (no shaders used for rendering or the fluid solving) so the resolution of the simulation is limited but still enough for interesting results.
 
-A demo for the project is available here https://github.com/sbobyn/stable-fluids.ts.
+A demo for the project is available here https://sbobyn.github.io/stable-fluids.ts/
 
 # Demos
 

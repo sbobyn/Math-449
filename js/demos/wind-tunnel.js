@@ -1,4 +1,3 @@
-import { addIOtoCanvas, } from "../canvas-io.js";
 import { BoundaryConditions, SimulationConfig } from "../config.js";
 import { Obstacle } from "../obstacle.js";
 import { clearCanvas, drawFPS, drawObstacle, draw_density, initRenderSettings, } from "../render-utils.js";
@@ -14,8 +13,43 @@ numIterSlider.oninput = function () {
 let prevTime;
 let simconfig;
 let solver;
-let canvas;
+const canvas = document.getElementById("canvas");
 let obstacle;
+let isDragging = false;
+let lastX;
+let lastY;
+function updateObstacle(dx, dy) {
+    obstacle.move(dx, dy);
+    solver.setObstacle(obstacle);
+}
+canvas.addEventListener("mousedown", (e) => {
+    const rect = canvas.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / 8;
+    const y = (e.clientY - rect.top) / 8;
+    if (obstacle.contains(x, y)) {
+        isDragging = true;
+        lastX = x;
+        lastY = y;
+    }
+});
+canvas.addEventListener("mousemove", (e) => {
+    if (isDragging) {
+        const rect = canvas.getBoundingClientRect();
+        const x = (e.clientX - rect.left) / 8;
+        const y = (e.clientY - rect.top) / 8;
+        const dx = x - lastX;
+        const dy = y - lastY;
+        updateObstacle(dx, dy);
+        lastX = x;
+        lastY = y;
+    }
+});
+canvas.addEventListener("mouseup", () => {
+    isDragging = false;
+});
+canvas.addEventListener("mouseout", () => {
+    isDragging = false;
+});
 function draw() {
     clearCanvas();
     draw_density();
@@ -70,8 +104,6 @@ export function main() {
     solver = new FluidSolver(simconfig);
     solver.setObstacle(obstacle);
     // init canvas
-    canvas = document.getElementById("canvas");
-    addIOtoCanvas(canvas);
     initRenderSettings(canvas, solver);
     // begin sim
     run(performance.now());

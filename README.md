@@ -12,15 +12,15 @@ A demo for the project is available here https://github.com/sbobyn/stable-fluids
 
 ## RGB Smoke Dyes
 
-![RGB Demo](./rgb-demo.gif)
+![RGB Demo](./assets/rgb-demo.gif)
 
 ## Wind Tunnel
 
-![Wind Tunnel Demo](./wind-tunnel-demo.gif)
+![Wind Tunnel Demo](./assets/wind-tunnel-demo.gif)
 
 ## Vector Field
 
-![Vector Field Demo](./vector-demo.gif)
+![Vector Field Demo](./assets/vector-demo.gif)
 
 # Follow ups
 

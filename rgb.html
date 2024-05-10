@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Stable Fluids 2D RGB</title>
+    <style>
+      canvas {
+        background-color: black;
+        border: solid black 1px;
+        /* image-rendering: pixelated; */
+      }
+    </style>
+    <script type="module" defer>
+      import { main } from "./js/demos/rgb.js";
+      window.addEventListener("DOMContentLoaded", main);
+      const experimentSelect = document.getElementById("experimentSelect");
+      experimentSelect.addEventListener("change", () => {
+        const experiment = experimentSelect.value;
+        window.location.href = `./${experiment}.html`;
+      });
+    </script>
+    <script
+      src="https://kit.fontawesome.com/fabb0ed66f.js"
+      crossorigin="anonymous"
+      defer
+    ></script>
+  </head>
+  <body>
+    <a id="github" href="https://github.com/sbobyn/stable-fluids.ts">
+      Code <i class="fa-brands fa-github"></i
+    ></a>
+    <br />
+    <label for="experimentSelect">Experiment:</label>
+    <select id="experimentSelect">
+      <option value="wind-tunnel">Wind Tunnel</option>
+      <option value="rgb" selected>RGB</option>
+      <option value="simple-vectors">Vector Field</option>
+    </select>
+    <br />
+    <br />
+    <canvas id="canvas" width="664" height="512"></canvas>
+    <br />
+
+    <h2>Simulation Controls</h2>
+    <ul>
+      <li>Right click: add smoke to a simulation</li>
+      <li>Left click and drag: change the velocity field</li>
+    </ul>
+    <h2>Settings</h2>
+    <ul>
+      <li>
+        <label for="numIterations">Number of iterations:</label>
+        <input id="numIterations" type="range" min="1" max="50" value="20" />
+        <span id="numIterationsValue">20</span>
+      </li>
+      <li>
+        <label for="dissipation">Dissipation Coefficient:</label>
+        <input
+          id="dissipation"
+          type="range"
+          min="0.99"
+          max="1"
+          step="0.001"
+          value="0.999"
+        />
+        <span id="dissipationValue">0.999</span>
+      </li>
+      <li>
+        <label for="boundarySelect">Boundary Conditions:</label>
+        <select id="boundarySelect">
+          <option value="box">Box</option>
+          <option value="periodic">Periodic</option>
+        </select>
+      </li>
+    </ul>
+  </body>
+</html>

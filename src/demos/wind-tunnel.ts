@@ -70,6 +70,50 @@ canvas.addEventListener("mouseout", () => {
   isDragging = false;
 });
 
+canvas.addEventListener(
+  "touchstart",
+  (e) => {
+    e.preventDefault(); // Prevents default touch behavior like scrolling
+    const touch = e.touches[0]; // Get the first touch
+    const rect = canvas.getBoundingClientRect();
+    const x = (touch.clientX - rect.left) / 8;
+    const y = (touch.clientY - rect.top) / 8;
+    if (obstacle.contains(x, y)) {
+      isDragging = true;
+      lastX = x;
+      lastY = y;
+    }
+  },
+  { passive: false }
+);
+
+canvas.addEventListener(
+  "touchmove",
+  (e) => {
+    if (isDragging) {
+      e.preventDefault();
+      const touch = e.touches[0]; // Get the first touch
+      const rect = canvas.getBoundingClientRect();
+      const x = (touch.clientX - rect.left) / 8;
+      const y = (touch.clientY - rect.top) / 8;
+      const dx = x - lastX;
+      const dy = y - lastY;
+      updateObstacle(dx, dy);
+      lastX = x;
+      lastY = y;
+    }
+  },
+  { passive: false }
+);
+
+canvas.addEventListener("touchend", () => {
+  isDragging = false;
+});
+
+canvas.addEventListener("touchcancel", () => {
+  isDragging = false;
+});
+
 function draw() {
   clearCanvas();
   draw_density();

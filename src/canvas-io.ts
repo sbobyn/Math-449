@@ -6,8 +6,7 @@ let omy: number;
 let mx: number;
 let my: number;
 
-let mouseLeftDown = false;
-let mouseRightDown = false;
+let mouseDown = false;
 
 let canvasRect: DOMRect;
 
@@ -20,10 +19,9 @@ function updateCanvasRect(canvas: HTMLCanvasElement) {
 
 function handleMouseDown(e: MouseEvent) {
   updateCanvasRect(e.target as HTMLCanvasElement);
-  if (e.button != 0 && e.button != 2) return;
+  if (e.button != 0) return;
 
-  mouseLeftDown = e.button == 0;
-  mouseRightDown = e.button == 2;
+  mouseDown = e.button == 0;
 
   mx = e.clientX - canvasRect.left;
   omx = mx;
@@ -34,7 +32,7 @@ function handleMouseDown(e: MouseEvent) {
 }
 
 function handleMouseMove(e: MouseEvent) {
-  if (!mouseLeftDown && !mouseRightDown) return;
+  if (!mouseDown) return;
 
   mx = e.clientX - canvasRect.left;
   my = e.clientY - canvasRect.top;
@@ -43,10 +41,9 @@ function handleMouseMove(e: MouseEvent) {
 }
 
 function handleMouseUp(e: MouseEvent) {
-  if (!mouseLeftDown && !mouseRightDown) return;
+  if (!mouseDown) return;
 
-  mouseLeftDown = false;
-  mouseRightDown = false;
+  mouseDown = false;
 
   // console.log(`mouse ${e.button} up`);
 }
@@ -59,9 +56,6 @@ export function addIOtoCanvas(canvas: HTMLCanvasElement) {
   canvas.addEventListener("mousedown", handleMouseDown);
   canvas.addEventListener("mousemove", handleMouseMove);
   canvas.addEventListener("mouseup", handleMouseUp);
-  canvas.addEventListener("contextmenu", function (e: Event) {
-    e.preventDefault();
-  });
 }
 
 export function get_from_UI(
@@ -70,19 +64,14 @@ export function get_from_UI(
   v: Float32Array,
   simconfig: SimulationConfig
 ) {
-  if (!mouseLeftDown && !mouseRightDown) return;
+  if (!mouseDown) return;
 
   const i = Math.floor((mx / win_x) * simconfig.W) + 1;
   const j = Math.floor((my / win_y) * simconfig.H) + 1;
 
-  if (mouseLeftDown) {
-    u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);
-    v[ix(i, j, simconfig)] = simconfig.force * (my - omy);
-  }
-
-  if (mouseRightDown) {
-    d[ix(i, j, simconfig)] = simconfig.source;
-  }
+  u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);
+  v[ix(i, j, simconfig)] = simconfig.force * (my - omy);
+  d[ix(i, j, simconfig)] = simconfig.source;
 
   omx = mx;
   omy = my;
@@ -93,15 +82,13 @@ export function get_vel_from_UI(
   v: Float32Array,
   simconfig: SimulationConfig
 ) {
-  if (!mouseLeftDown) return;
+  if (!mouseDown) return;
 
   const i = Math.floor((mx / win_x) * simconfig.W) + 1;
   const j = Math.floor((my / win_y) * simconfig.H) + 1;
 
-  if (mouseLeftDown) {
-    u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);
-    v[ix(i, j, simconfig)] = simconfig.force * (my - omy);
-  }
+  u[ix(i, j, simconfig)] = simconfig.force * (mx - omx);
+  v[ix(i, j, simconfig)] = simconfig.force * (my - omy);
 
   omx = mx;
   omy = my;
@@ -116,7 +103,7 @@ export function get_RGB_from_UI(
   bmult: number,
   simconfig: SimulationConfig
 ) {
-  if (!mouseRightDown) return;
+  if (!mouseDown) return;
 
   const i = Math.floor((mx / win_x) * simconfig.W) + 1;
   const j = Math.floor((my / win_y) * simconfig.H) + 1;

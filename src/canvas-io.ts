@@ -48,6 +48,44 @@ function handleMouseUp(e: MouseEvent) {
   // console.log(`mouse ${e.button} up`);
 }
 
+function handleTouchStart(e: TouchEvent) {
+  e.preventDefault(); // Prevent scrolling and other default actions
+  updateCanvasRect(e.target as HTMLCanvasElement);
+  if (e.touches.length > 0) {
+    const touch = e.touches[0]; // Get the first touch
+
+    mouseDown = true;
+
+    mx = touch.clientX - canvasRect.left;
+    omx = mx;
+    my = touch.clientY - canvasRect.top;
+    omy = my;
+
+    // console.log(`touch down at (${mx}, ${my})`);
+  }
+}
+
+function handleTouchMove(e: TouchEvent) {
+  if (!mouseDown) return;
+  e.preventDefault(); // Continue to prevent default actions
+
+  const touch = e.touches[0]; // Update with the movement of the first touch
+  mx = touch.clientX - canvasRect.left;
+  my = touch.clientY - canvasRect.top;
+
+  // console.log(`touch move at (${mx}, ${my})`);
+}
+
+function handleTouchEnd(e: TouchEvent) {
+  mouseDown = false;
+  // console.log(`touch up`);
+}
+
+function handleTouchCancel(e: TouchEvent) {
+  mouseDown = false;
+  // console.log(`touch cancel`);
+}
+
 export function addIOtoCanvas(canvas: HTMLCanvasElement) {
   canvasRect = canvas.getBoundingClientRect();
   win_x = canvas.width;
@@ -56,6 +94,12 @@ export function addIOtoCanvas(canvas: HTMLCanvasElement) {
   canvas.addEventListener("mousedown", handleMouseDown);
   canvas.addEventListener("mousemove", handleMouseMove);
   canvas.addEventListener("mouseup", handleMouseUp);
+
+  // mobile events
+  canvas.addEventListener("touchstart", handleTouchStart, { passive: false });
+  canvas.addEventListener("touchmove", handleTouchMove, { passive: false });
+  canvas.addEventListener("touchend", handleTouchEnd);
+  canvas.addEventListener("touchcancel", handleTouchCancel);
 }
 
 export function get_from_UI(
